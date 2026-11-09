@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 아이 맞춤 영상</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+         background: #fff8f0; color: #333; }
+  #app { max-width: 480px; margin: 0 auto; padding: 16px 16px 100px; }
+  .step { color: #e8833a; font-weight: bold; font-size: 14px; }
+  h2 { margin: 6px 0 4px; font-size: 22px; }
+  h3 { margin: 20px 0 8px; font-size: 16px; color: #666; }
+  .hint { color: #888; font-size: 14px; margin: 0 0 12px; }
+  .opt { display: block; width: 100%; text-align: left; padding: 14px; margin: 8px 0;
+         border: 2px solid #eee; border-radius: 12px; background: #fff; font-size: 16px; color: #333; }
+  .opt.on { border-color: #e8833a; background: #fff1e4; font-weight: bold; }
+  input { width: 100%; padding: 14px; margin-top: 12px; border: 2px dashed #ddd; border-radius: 12px; font-size: 16px; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; padding: 12px 16px;
+         background: #fff8f0; max-width: 480px; margin: 0 auto; }
+  .btn { flex: 1; padding: 16px; border: 0; border-radius: 12px; font-size: 16px; font-weight: bold;
+         background: #e8833a; color: #fff; }
+  .btn.sub { background: #eee; color: #555; flex: 0 0 30%; }
+  .card { display: flex; gap: 12px; align-items: center; width: 100%; padding: 8px; margin: 8px 0;
+          border: 0; border-radius: 12px; background: #fff; text-align: left; font-size: 15px; color: #333; }
+  .card img { width: 120px; border-radius: 8px; }
+  .empty { color: #aaa; font-size: 14px; }
+  .player { position: relative; padding-top: 56.25%; margin: 12px 0; }
+  .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 12px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- 영상 목록 (직접 고치는 파일) -->
+<script src="videos.js"></script>
+
+<script>
+// ---------- 문진 항목 (기획 문서 '부모 문진 카테고리' 그대로) ----------
+const AGES = { "0~12개월": "영아 초기", "12~24개월": "걸음마기", "24~36개월": "두 돌~세 돌", "3~5세": "유아기" };
+const GENDERS = ["남아", "여아", "선택 안 함"];
+
+const HELPS = {
+  "언어": ["한국어 단어·말하기", "영어 노출, 영어 동요", "숫자·색깔·모양 같은 기초 개념"],
+  "생활 습관": ["식사 습관 (앉아서 먹기, 골고루 먹기)", "양치·손 씻기·목욕", "잠자리 습관", "배변 훈련"],
+  "정서·행동": ["칭얼거림·떼쓰기 줄이기", "감정 표현하기 (화나요, 슬퍼요 말하기)", "기다리기, 차례 지키기", "나누기, 친구와 사이좋게 지내기"],
+  "발달·호기심": ["동물·자연·탈것 등 세상 알기", "음악·리듬·율동", "소근육·대근육 놀이 따라하기"],
+};
+
+// 어려운 점 → 어떤 '바라는 점' 영상을 보여줄지 연결
+const PROBLEMS = {
+  "0~12개월": {
+    "식사·수유 시간에 집중을 못 함": ["식사 습관 (앉아서 먹기, 골고루 먹기)"],
+    "잠투정, 재우기 어려움": ["잠자리 습관"],
+    "낯가림, 엄마 아빠와 떨어지면 울음": ["감정 표현하기 (화나요, 슬퍼요 말하기)"],
+    "기저귀 갈기, 목욕 등 일상 돌봄 때 보챔": ["양치·손 씻기·목욕"],
+  },
+  "12~24개월": {
+    "밥 먹을 때 돌아다니거나 거부함": ["식사 습관 (앉아서 먹기, 골고루 먹기)"],
+    "칭얼거림, 떼쓰기가 잦음": ["칭얼거림·떼쓰기 줄이기"],
+    "말이 늦은 것 같아 걱정됨": ["한국어 단어·말하기"],
+    "양치·옷 입기를 싫어함": ["양치·손 씻기·목욕"],
+    "잠자리 습관이 잡히지 않음": ["잠자리 습관"],
+  },
+  "24~36개월": {
+    "떼쓰기, 고집이 강해짐": ["칭얼거림·떼쓰기 줄이기"],
+    "배변 훈련이 어려움": ["배변 훈련"],
+    "친구와 나누기, 차례 지키기가 어려움": ["나누기, 친구와 사이좋게 지내기", "기다리기, 차례 지키기"],
+    "감정을 말 대신 울음·행동으로 표현함": ["감정 표현하기 (화나요, 슬퍼요 말하기)"],
+    "편식이 심함": ["식사 습관 (앉아서 먹기, 골고루 먹기)"],
+  },
+  "3~5세": {
+    "규칙·약속을 잘 안 지킴": ["기다리기, 차례 지키기"],
+    "형제·친구와 다툼": ["나누기, 친구와 사이좋게 지내기"],
+    "새로운 환경(어린이집·유치원) 적응이 어려움": ["감정 표현하기 (화나요, 슬퍼요 말하기)"],
+    "화면 시간을 줄이기 어려움": ["소근육·대근육 놀이 따라하기"],
+  },
+};
+
+// ---------- 문진 4단계 ----------
+const STEPS = [
+  { key: "age",      title: "아이 나이대를 골라주세요", multi: false,
+    groups: () => ({ "": Object.keys(AGES).map(a => a + " (" + AGES[a] + ")") }) },
+  { key: "gender",   title: "아이 성별을 골라주세요", multi: false,
+    groups: () => ({ "": GENDERS }) },
+  { key: "problems", title: "지금 육아에서 어려운 점은?", multi: true,
+    groups: () => ({ "": Object.keys(PROBLEMS[profile.age] || {}) }) },
+  { key: "helps",    title: "아이에게 도움이 됐으면 하는 점은?", multi: true,
+    groups: () => HELPS },
+];
+
+// ---------- 저장된 답 불러오기 ----------
+let profile;
+try { profile = JSON.parse(localStorage.getItem("profile")); } catch (e) {}
+const app = document.getElementById("app");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function save() { try { localStorage.setItem("profile", JSON.stringify(profile)); } catch (e) {} }
+
+function start() {
+  profile = { age: "", gender: "", problems: [], helps: [], etc: {} };
+  showStep(0);
+}
+
+// ---------- 1. 문진 화면 ----------
+function showStep(i) {
+  const s = STEPS[i];
+  const groups = s.groups();
+  let html = `<div class="step">${i + 1} / 4</div><h2>${s.title}</h2>
+    <p class="hint">${s.multi ? "여러 개 골라도 돼요" : "하나만 골라주세요"}</p>`;
+  for (const g in groups) {
+    if (g) html += `<h3>${g}</h3>`;
+    for (const opt of groups[g]) {
+      const value = s.key === "age" ? opt.split(" ")[0] : opt;
+      const on = s.multi ? profile[s.key].includes(value) : profile[s.key] === value;
+      html += `<button class="opt ${on ? "on" : ""}" data-v="${esc(value)}">${opt}</button>`;
+    }
+  }
+  html += `<input id="etc" placeholder="기타 직접 입력" value="${esc(profile.etc[s.key] || "")}">
+    <div class="bar">
+      ${i > 0 ? `<button class="btn sub" id="prev">이전</button>` : ""}
+      <button class="btn" id="next">${i < 3 ? "다음" : "추천 영상 보기"}</button>
+    </div>`;
+  app.innerHTML = html;
+
+  app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+    const v = b.dataset.v;
+    if (s.multi) {
+      const list = profile[s.key];
+      list.includes(v) ? list.splice(list.indexOf(v), 1) : list.push(v);
+    } else {
+      if (s.key === "age" && profile.age !== v) profile.problems = []; // 나이가 바뀌면 어려운 점 초기화
+      profile[s.key] = v;
+    }
+    profile.etc[s.key] = document.getElementById("etc").value;
+    showStep(i);
+  });
+  const keepEtc = () => profile.etc[s.key] = document.getElementById("etc").value;
+  if (i > 0) document.getElementById("prev").onclick = () => { keepEtc(); showStep(i - 1); window.scrollTo(0, 0); };
+  document.getElementById("next").onclick = () => {
+    keepEtc();
+    if (i < 3) { showStep(i + 1); window.scrollTo(0, 0); }
+    else { save(); showList(); }
+  };
+}
+
+// ---------- 2. 추천 화면 ----------
+function showList() {
+  // 바라는 점 + 어려운 점에 연결된 카테고리를 모음
+  const cats = [...profile.helps];
+  for (const p of profile.problems)
+    for (const c of (PROBLEMS[profile.age] || {})[p] || [])
+      if (!cats.includes(c)) cats.push(c);
+
+  let html = `<h2>추천 영상</h2><p class="hint">${profile.age || "나이 미선택"} · 고른 항목에 맞춘 영상이에요</p>`;
+  if (!cats.length) html += `<p class="empty">고른 항목이 없어요. 다시 골라주세요.</p>`;
+  for (const c of cats) {
+    const list = (VIDEOS[c] || []).filter(v => !profile.age || !v.ages || v.ages.includes(profile.age));
+    html += `<h3>${c}</h3>`;
+    if (!list.length) html += `<p class="empty">아직 이 나이에 맞는 영상이 없어요</p>`;
+    for (const v of list) {
+      const id = videoId(v.url);
+      html += `<button class="card" data-id="${id}" data-t="${esc(v.title)}">
+        <img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt=""><span>${esc(v.title)}</span></button>`;
+    }
+  }
+  html += `<div class="bar"><button class="btn" id="redo">다시 고르기</button></div>`;
+  app.innerHTML = html;
+  app.querySelectorAll(".card").forEach(b => b.onclick = () => showPlayer(b.dataset.id, b.dataset.t));
+  document.getElementById("redo").onclick = start;
+  window.scrollTo(0, 0);
+}
+
+// 유튜브 주소에서 영상 번호(11자리)를 뽑아냄
+function videoId(url) {
+  const m = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/);
+  return m ? m[1] : "";
+}
+
+// ---------- 3. 재생 화면 (유튜브 공식 임베드) ----------
+function showPlayer(id, title) {
+  app.innerHTML = `<h2>${esc(title)}</h2>
+    <div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0"
+      allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+    <div class="bar"><button class="btn" id="back">← 목록으로</button></div>`;
+  document.getElementById("back").onclick = showList;
+  window.scrollTo(0, 0);
+}
+
+// 처음 열 때: 저장된 답이 있으면 바로 추천 화면, 없으면 문진 시작
+profile ? showList() : start();
+</script>
+</body>
+</html>
