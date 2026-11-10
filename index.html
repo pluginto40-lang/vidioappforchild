@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F2F1EE">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>우리 아이 맞춤 영상</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
@@ -76,6 +77,7 @@
   .card + .card { border-top: 1px solid var(--line); }
   .card img { width: 112px; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; flex: none; background: var(--line); }
   .card span { flex: 1; font-size: 15px; font-weight: 600; line-height: 1.4; }
+  .card small { display: block; font-size: 12px; font-weight: 400; color: var(--sub); margin-top: 5px; }
   .card::after { content: "›"; color: #C3BFB9; font-size: 22px; }
   .empty { padding: 18px; color: var(--sub); font-size: 14px; }
 
@@ -96,31 +98,38 @@
 <script src="videos.js"></script>
 
 <script>
-// ---------- 문진 항목 (기획 문서 '부모 문진 카테고리' 그대로) ----------
+// ---------- 문진 항목 ----------
 const AGES = { "0~12개월": "영아 초기", "12~24개월": "걸음마기", "24~36개월": "두 돌~세 돌", "3~5세": "유아기" };
 const GENDERS = ["남아", "여아", "선택 안 함"];
 
 const HELPS = {
-  "언어": ["한국어 단어·말하기", "영어 노출, 영어 동요", "숫자·색깔·모양 같은 기초 개념"],
-  "생활 습관": ["식사 습관 (앉아서 먹기, 골고루 먹기)", "양치·손 씻기·목욕", "잠자리 습관", "배변 훈련"],
-  "정서·행동": ["칭얼거림·떼쓰기 줄이기", "감정 표현하기 (화나요, 슬퍼요 말하기)", "기다리기, 차례 지키기", "나누기, 친구와 사이좋게 지내기"],
-  "발달·호기심": ["동물·자연·탈것 등 세상 알기", "음악·리듬·율동", "소근육·대근육 놀이 따라하기"],
+  "언어·기초 개념": ["한국어 단어·말하기", "영어 노출, 영어 동요", "숫자·색깔·모양 같은 기초 개념"],
+  "생활 습관": ["식사 습관 (앉아서 먹기, 골고루 먹기)", "양치·손 씻기·목욕", "양치 습관", "손 씻기 습관", "목욕 습관", "잠자리 습관", "배변 훈련", "장난감 정리하기", "옷 입기·벗기"],
+  "정서·관계": ["칭얼거림·떼쓰기 줄이기", "감정 표현하기 (화나요, 슬퍼요 말하기)", "기다리기, 차례 지키기", "나누기, 친구와 사이좋게 지내기", "부모와 잠시 떨어지기", "어린이집·유치원 적응"],
+  "호기심·놀이·안전": ["동물·자연·탈것 등 세상 알기", "동물·자연 알아보기", "자동차·기차·탈것 알아보기", "음악·리듬·율동", "소근육·대근육 놀이 따라하기", "생활 속 안전"],
 };
 
-// 어려운 점 → 어떤 '바라는 점' 영상을 보여줄지 연결
+// 어려운 점을 관련 영상 분류에 연결합니다. 기존 항목 이름은 저장된 답을 위해 유지합니다.
 const PROBLEMS = {
   "0~12개월": {
     "식사·수유 시간에 집중을 못 함": ["식사 습관 (앉아서 먹기, 골고루 먹기)"],
     "잠투정, 재우기 어려움": ["잠자리 습관"],
-    "낯가림, 엄마 아빠와 떨어지면 울음": ["감정 표현하기 (화나요, 슬퍼요 말하기)"],
-    "기저귀 갈기, 목욕 등 일상 돌봄 때 보챔": ["양치·손 씻기·목욕"],
+    "낯가림, 엄마 아빠와 떨어지면 울음": ["부모와 잠시 떨어지기"],
+    "기저귀 갈기, 목욕 등 일상 돌봄 때 보챔": ["목욕 습관"],
+    "아이에게 어떤 말을 들려줄지 막막함": ["한국어 단어·말하기"],
+    "함께 부를 노래를 찾기 어려움": ["음악·리듬·율동"],
+    "함께 할 몸놀이가 떠오르지 않음": ["소근육·대근육 놀이 따라하기"],
+    "주변 사물이나 동물을 알려주고 싶음": ["동물·자연 알아보기"],
   },
   "12~24개월": {
     "밥 먹을 때 돌아다니거나 거부함": ["식사 습관 (앉아서 먹기, 골고루 먹기)"],
     "칭얼거림, 떼쓰기가 잦음": ["칭얼거림·떼쓰기 줄이기"],
     "말이 늦은 것 같아 걱정됨": ["한국어 단어·말하기"],
-    "양치·옷 입기를 싫어함": ["양치·손 씻기·목욕"],
+    "양치·옷 입기를 싫어함": ["양치 습관", "옷 입기·벗기"],
     "잠자리 습관이 잡히지 않음": ["잠자리 습관"],
+    "손 씻기나 목욕을 거부함": ["손 씻기 습관", "목욕 습관"],
+    "부모와 잠시 떨어지는 것을 어려워함": ["부모와 잠시 떨어지기"],
+    "장난감을 함께 정리하기 어려움": ["장난감 정리하기"],
   },
   "24~36개월": {
     "떼쓰기, 고집이 강해짐": ["칭얼거림·떼쓰기 줄이기"],
@@ -128,19 +137,26 @@ const PROBLEMS = {
     "친구와 나누기, 차례 지키기가 어려움": ["나누기, 친구와 사이좋게 지내기", "기다리기, 차례 지키기"],
     "감정을 말 대신 울음·행동으로 표현함": ["감정 표현하기 (화나요, 슬퍼요 말하기)"],
     "편식이 심함": ["식사 습관 (앉아서 먹기, 골고루 먹기)"],
+    "어린이집에 가기 싫어함": ["어린이집·유치원 적응", "부모와 잠시 떨어지기"],
+    "스스로 옷 입기·벗기를 어려워함": ["옷 입기·벗기"],
+    "밖에서 위험한 행동을 하려 함": ["생활 속 안전"],
   },
   "3~5세": {
-    "규칙·약속을 잘 안 지킴": ["기다리기, 차례 지키기"],
+    "규칙·약속을 잘 안 지킴": ["기다리기, 차례 지키기", "생활 속 안전"],
     "형제·친구와 다툼": ["나누기, 친구와 사이좋게 지내기"],
-    "새로운 환경(어린이집·유치원) 적응이 어려움": ["감정 표현하기 (화나요, 슬퍼요 말하기)"],
+    "새로운 환경(어린이집·유치원) 적응이 어려움": ["어린이집·유치원 적응"],
     "화면 시간을 줄이기 어려움": ["소근육·대근육 놀이 따라하기"],
+    "놀이가 끝난 뒤 정리를 어려워함": ["장난감 정리하기"],
+    "화났을 때 마음을 말하기 어려워함": ["감정 표현하기 (화나요, 슬퍼요 말하기)"],
+    "양치나 손 씻기를 자꾸 미룸": ["양치 습관", "손 씻기 습관"],
+    "숫자·색깔·모양을 어떻게 알려줄지 고민됨": ["숫자·색깔·모양 같은 기초 개념"],
   },
 };
 
 // ---------- 문진 4단계 ----------
 const STEPS = [
   { key: "age", multi: false, title: "아이가 지금<br>몇 살인가요?",
-    desc: "나이에 맞는 영상만 골라 드릴게요.",
+    desc: "나이대에 따라 고민 항목을 보여드려요.",
     groups: () => ({ "": Object.keys(AGES) }) },
   { key: "gender", multi: false, title: "아이 성별을<br>알려주세요",
     desc: "추천에는 쓰지 않아요. 건너뛰어도 괜찮아요.",
@@ -224,29 +240,65 @@ function showStep(i) {
 }
 
 // ---------- 2. 추천 화면 ----------
+function recommend(answers) {
+  const categories = new Set(answers.helps || []);
+  for (const problem of answers.problems || [])
+    for (const category of (PROBLEMS[answers.age] || {})[problem] || [])
+      categories.add(category);
+  for (const text of [answers.etc?.problems, answers.etc?.helps]) {
+    if (!text?.trim()) continue;
+    for (const category of Object.values(HELPS).flat())
+      if (category.includes(text.trim())) categories.add(category);
+  }
+  const english = "영어 노출, 영어 동요";
+  const byId = new Map();
+  for (const [category, list] of Object.entries(VIDEOS)) {
+    for (const video of list) {
+      const id = videoId(video.url);
+      const language = video.language || (category === english ? "en" : "ko");
+      if (!id || (video.ages && answers.age && !video.ages.includes(answers.age))) continue;
+      if (language === "en" && !categories.has(english)) continue;
+      if (language === "ko" && categories.size === 1 && categories.has(english)) continue;
+      if (!byId.has(id)) byId.set(id, { ...video, id, categories: [] });
+      byId.get(id).categories.push(category);
+    }
+  }
+  const groupNames = Object.entries(HELPS)
+    .filter(([, items]) => items.some(c => categories.has(c)))
+    .map(([name]) => name);
+  const direct = [], related = [];
+  for (const video of byId.values()) {
+    video.matches = video.categories.filter(c => categories.has(c));
+    if (video.matches.length) direct.push(video);
+    else if (groupNames.some(name => HELPS[name].some(c => video.categories.includes(c))))
+      related.push(video);
+  }
+  direct.sort((a, b) => b.matches.length - a.matches.length);
+  // 연관 / 전체 <= 40%. 직접 영상이 부족해도 이 비율을 넘겨 채우지 않습니다.
+  const extra = Math.min(Math.max(0, 10 - direct.length), Math.floor(direct.length * 2 / 3));
+  return { direct, related: related.slice(0, extra), categories };
+}
+
 function showList() {
   document.body.className = "";
-  // 바라는 점 + 어려운 점에 연결된 카테고리를 모음
-  const cats = [...profile.helps];
-  for (const p of profile.problems)
-    for (const c of (PROBLEMS[profile.age] || {})[p] || [])
-      if (!cats.includes(c)) cats.push(c);
-
+  const result = recommend(profile);
+  const count = result.direct.length + result.related.length;
   let html = `<div style="position:relative">${HERO}<button class="redo" id="redo">다시 고르기</button></div>
-    <div class="head"><div class="eyebrow">${profile.age ? profile.age + " 맞춤" : "맞춤 추천"}</div>
+    <div class="head"><div class="eyebrow">${esc(profile.age || "우리 아이")} · 추천 ${count}편</div>
       <h1>오늘 보여주기 좋은<br>영상을 골랐어요</h1>
-      <p class="desc">고르신 고민과 바람에 맞춘 영상이에요.</p></div>`;
-  if (!cats.length) html += `<div class="list" style="margin-top:20px"><p class="empty">고른 항목이 없어요. 오른쪽 위 '다시 고르기'를 눌러주세요.</p></div>`;
-  for (const c of cats) {
-    const list = (VIDEOS[c] || []).filter(v => !profile.age || !v.ages || v.ages.includes(profile.age));
-    html += `<div class="group">${c}</div><div class="list">`;
-    if (!list.length) html += `<p class="empty">아직 이 나이에 맞는 영상이 없어요</p>`;
+      <p class="desc">선택한 주제의 영상을 먼저 보여드려요. 연관 영상은 전체의 40% 이하로 함께 보여드려요.</p></div>`;
+  if (!result.categories.size) html += '<p class="empty">어려운 점이나 바라는 점을 골라주세요. 직접 입력은 분류 이름과 일치하는 부분으로 찾아요.</p>';
+  else if (count < 10) html += '<p class="empty">이 선택에 맞는 영상이 아직 부족해요. 등록된 영상부터 보여드려요.</p>';
+  for (const [label, list] of [["선택한 주제", result.direct], ["함께 볼 연관 영상", result.related]]) {
+    if (!list.length) continue;
+    html += `<div class="group">${label} · ${list.length}편</div><div class="list">`;
     for (const v of list) {
-      const id = videoId(v.url);
-      html += `<button class="card" data-id="${id}" data-t="${esc(v.title)}" data-c="${esc(c)}">
-        <img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="" loading="lazy"><span>${esc(v.title)}</span></button>`;
+      const reason = (v.matches.length ? v.matches : v.categories).join(" · ");
+      html += `<button class="card" data-id="${v.id}" data-t="${esc(v.title)}" data-c="${esc(reason)}">
+        <img src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="" loading="lazy">
+        <span>${esc(v.title)}<small>${esc(reason)}</small></span></button>`;
     }
-    html += `</div>`;
+    html += "</div>";
   }
   app.innerHTML = html;
   app.querySelectorAll(".card").forEach(b => b.onclick = () => showPlayer(b.dataset.id, b.dataset.t, b.dataset.c));
@@ -256,15 +308,32 @@ function showList() {
 
 // 유튜브 주소에서 영상 번호(11자리)를 뽑아냄
 function videoId(url) {
-  const m = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/);
-  return m ? m[1] : "";
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === "youtu.be") return /^[\w-]{11}$/.test(parsed.pathname.slice(1)) ? parsed.pathname.slice(1) : "";
+    if (!["youtube.com", "www.youtube.com", "m.youtube.com"].includes(parsed.hostname)) return "";
+    const id = parsed.searchParams.get("v") || parsed.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]{11})$/)?.[1];
+    return /^[\w-]{11}$/.test(id || "") ? id : "";
+  } catch { return ""; }
 }
 
 // ---------- 3. 재생 화면 (유튜브 공식 임베드) ----------
 function showPlayer(id, title, cat) {
   document.body.className = "dark";
+  if (location.protocol === "file:") {
+    app.innerHTML = `<div class="top"><button class="back" id="back" aria-label="목록으로">←</button></div>
+      <div class="now"><h1>앱 실행 파일로 열어주세요</h1>
+      <p>지금은 파일을 직접 열어서 유튜브 오류 153이 발생하는 환경이에요.</p>
+      <p>이 폴더의 <strong>실행.cmd</strong>를 더블클릭하고, 새로 열린 브라우저에서 영상을 골라주세요.</p>
+      <p>휴대폰에서는 웹에 올린 앱 주소로 접속해 주세요.</p></div>`;
+    document.getElementById("back").onclick = showList;
+    window.scrollTo(0, 0);
+    return;
+  }
+  const playerUrl = new URL("https://www.youtube-nocookie.com/embed/" + id);
+  playerUrl.search = new URLSearchParams({ autoplay: "1", playsinline: "1", rel: "0", origin: location.origin });
   app.innerHTML = `<div class="top"><button class="back" id="back" aria-label="목록으로">←</button></div>
-    <div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0"
+    <div class="player"><iframe title="${esc(title)}" referrerpolicy="strict-origin-when-cross-origin" src="${esc(playerUrl.href)}"
       allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
     <div class="now"><div class="eyebrow">${esc(cat)}</div><h1>${esc(title)}</h1></div>`;
   document.getElementById("back").onclick = showList;
@@ -272,7 +341,10 @@ function showPlayer(id, title, cat) {
 }
 
 // 처음 열 때: 저장된 답이 있으면 바로 추천 화면, 없으면 문진 시작
-profile ? showList() : start();
+if (profile && Array.isArray(profile.helps) && Array.isArray(profile.problems)) {
+  profile.etc ||= {};
+  showList();
+} else start();
 </script>
 </body>
 </html>
