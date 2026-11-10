@@ -2,32 +2,91 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F1EE">
 <title>우리 아이 맞춤 영상</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-         background: #fff8f0; color: #333; }
-  #app { max-width: 480px; margin: 0 auto; padding: 16px 16px 100px; }
-  .step { color: #e8833a; font-weight: bold; font-size: 14px; }
-  h2 { margin: 6px 0 4px; font-size: 22px; }
-  h3 { margin: 20px 0 8px; font-size: 16px; color: #666; }
-  .hint { color: #888; font-size: 14px; margin: 0 0 12px; }
-  .opt { display: block; width: 100%; text-align: left; padding: 14px; margin: 8px 0;
-         border: 2px solid #eee; border-radius: 12px; background: #fff; font-size: 16px; color: #333; }
-  .opt.on { border-color: #e8833a; background: #fff1e4; font-weight: bold; }
-  input { width: 100%; padding: 14px; margin-top: 12px; border: 2px dashed #ddd; border-radius: 12px; font-size: 16px; }
-  .bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; padding: 12px 16px;
-         background: #fff8f0; max-width: 480px; margin: 0 auto; }
-  .btn { flex: 1; padding: 16px; border: 0; border-radius: 12px; font-size: 16px; font-weight: bold;
-         background: #e8833a; color: #fff; }
-  .btn.sub { background: #eee; color: #555; flex: 0 0 30%; }
-  .card { display: flex; gap: 12px; align-items: center; width: 100%; padding: 8px; margin: 8px 0;
-          border: 0; border-radius: 12px; background: #fff; text-align: left; font-size: 15px; color: #333; }
-  .card img { width: 120px; border-radius: 8px; }
-  .empty { color: #aaa; font-size: 14px; }
-  .player { position: relative; padding-top: 56.25%; margin: 12px 0; }
-  .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 12px; }
+  :root {
+    --bg: #F2F1EE;       /* 따뜻한 회색 바탕 */
+    --card: #FFFFFF;
+    --ink: #1C1B1A;      /* 글자 */
+    --sub: #8A8782;      /* 보조 글자 */
+    --line: #E6E3DE;
+    --accent: #FF6B3D;   /* 주황 포인트 */
+    --accent-soft: #FFF0EA;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font-family: Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+         -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  #app { max-width: 480px; margin: 0 auto; padding: 0 20px 120px; }
+
+  /* 상단 그림 */
+  .hero { margin: 0 -20px; height: 210px; position: relative; overflow: hidden; }
+  .hero svg { width: 100%; height: 100%; display: block; }
+  .hero + .head { margin-top: -8px; }
+
+  /* 제목 */
+  .head { padding: 20px 0 8px; }
+  .eyebrow { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+  h1 { font-size: 28px; line-height: 1.25; font-weight: 800; letter-spacing: -0.8px; margin: 0; }
+  .desc { font-size: 15px; line-height: 1.5; color: var(--sub); margin: 8px 0 0; }
+
+  /* 상단 진행 표시 */
+  .top { display: flex; align-items: center; gap: 12px; padding: 14px 0 4px; height: 52px; }
+  .back { width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--card); font-size: 18px; flex: none; }
+  .progress { flex: 1; display: flex; gap: 6px; }
+  .progress i { flex: 1; height: 4px; border-radius: 4px; background: var(--line); }
+  .progress i.done { background: var(--ink); }
+
+  /* 묶음 */
+  .group { font-size: 13px; font-weight: 600; color: var(--sub); margin: 24px 4px 8px; }
+  .list { background: var(--card); border-radius: 20px; overflow: hidden; }
+
+  /* 선택 항목 */
+  .opt { display: flex; align-items: center; gap: 12px; width: 100%; padding: 17px 18px; border: 0;
+         background: none; text-align: left; font-size: 16px; line-height: 1.35; }
+  .opt + .opt { border-top: 1px solid var(--line); }
+  .opt span { flex: 1; }
+  .opt small { display: block; color: var(--sub); font-size: 13px; margin-top: 2px; }
+  .opt::after { content: ""; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
+  .opt.on::after { border-color: var(--accent); background: var(--accent)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat; }
+  .opt.on { font-weight: 600; }
+
+  .etc { width: 100%; margin-top: 12px; padding: 17px 18px; border: 0; border-radius: 20px;
+         background: var(--card); font: inherit; font-size: 16px; color: var(--ink); outline: none; }
+  .etc::placeholder { color: #B5B1AB; }
+  .etc:focus { box-shadow: 0 0 0 2px var(--ink) inset; }
+
+  /* 하단 버튼 */
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+         background: linear-gradient(to top, var(--bg) 70%, rgba(242,241,238,0)); }
+  .btn { display: block; width: 100%; max-width: 440px; margin: 0 auto; padding: 18px; border: 0; border-radius: 999px;
+         background: var(--ink); color: #fff; font-size: 17px; font-weight: 700; }
+  .btn:active { transform: scale(0.98); }
+
+  /* 추천 목록 */
+  .redo { position: absolute; top: 14px; right: 16px; border: 0; padding: 8px 14px; border-radius: 999px;
+          background: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600; }
+  .card { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px; border: 0;
+          background: none; text-align: left; }
+  .card + .card { border-top: 1px solid var(--line); }
+  .card img { width: 112px; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; flex: none; background: var(--line); }
+  .card span { flex: 1; font-size: 15px; font-weight: 600; line-height: 1.4; }
+  .card::after { content: "›"; color: #C3BFB9; font-size: 22px; }
+  .empty { padding: 18px; color: var(--sub); font-size: 14px; }
+
+  /* 재생 화면 (어두운 화면) */
+  body.dark { background: #16131F; color: #fff; }
+  body.dark .back { background: rgba(255,255,255,0.12); color: #fff; }
+  .player { margin: 16px -20px 0; aspect-ratio: 16/9; background: #000; }
+  .player iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .now { padding: 20px 0; }
+  .now .eyebrow { color: #FFB199; }
+  .now h1 { font-size: 22px; }
 </style>
 </head>
 <body>
@@ -80,15 +139,32 @@ const PROBLEMS = {
 
 // ---------- 문진 4단계 ----------
 const STEPS = [
-  { key: "age",      title: "아이 나이대를 골라주세요", multi: false,
-    groups: () => ({ "": Object.keys(AGES).map(a => a + " (" + AGES[a] + ")") }) },
-  { key: "gender",   title: "아이 성별을 골라주세요", multi: false,
+  { key: "age", multi: false, title: "아이가 지금<br>몇 살인가요?",
+    desc: "나이에 맞는 영상만 골라 드릴게요.",
+    groups: () => ({ "": Object.keys(AGES) }) },
+  { key: "gender", multi: false, title: "아이 성별을<br>알려주세요",
+    desc: "추천에는 쓰지 않아요. 건너뛰어도 괜찮아요.",
     groups: () => ({ "": GENDERS }) },
-  { key: "problems", title: "지금 육아에서 어려운 점은?", multi: true,
+  { key: "problems", multi: true, title: "요즘 어떤 점이<br>가장 힘드세요?",
+    desc: "해당하는 걸 모두 골라주세요.",
     groups: () => ({ "": Object.keys(PROBLEMS[profile.age] || {}) }) },
-  { key: "helps",    title: "아이에게 도움이 됐으면 하는 점은?", multi: true,
+  { key: "helps", multi: true, title: "아이에게 어떤 도움이<br>됐으면 하나요?",
+    desc: "여러 개 골라도 돼요.",
     groups: () => HELPS },
 ];
+
+// 상단 그림: 하늘, 해, 구름, 언덕 (직접 그린 SVG)
+const HERO = `<div class="hero"><svg viewBox="0 0 400 210" preserveAspectRatio="xMidYMax slice">
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#BFE0FA"/><stop offset="1" stop-color="#F2F1EE"/></linearGradient></defs>
+  <rect width="400" height="210" fill="url(#sky)"/>
+  <circle cx="318" cy="64" r="30" fill="#FFCB57"/>
+  <g fill="#fff"><ellipse cx="96" cy="70" rx="36" ry="15"/><ellipse cx="118" cy="60" rx="22" ry="16"/>
+    <ellipse cx="250" cy="104" rx="26" ry="10"/><ellipse cx="264" cy="97" rx="15" ry="11"/></g>
+  <path d="M0 170 C70 130 140 140 210 160 S330 150 400 130 V210 H0Z" fill="#A9DBA8"/>
+  <path d="M0 190 C90 160 170 175 250 185 S360 175 400 168 V210 H0Z" fill="#7CC48B"/>
+  <path d="M0 210 V200 C120 188 280 196 400 192 V210Z" fill="#F2F1EE"/>
+</svg></div>`;
 
 // ---------- 저장된 답 불러오기 ----------
 let profile;
@@ -101,29 +177,32 @@ function save() { try { localStorage.setItem("profile", JSON.stringify(profile))
 function start() {
   profile = { age: "", gender: "", problems: [], helps: [], etc: {} };
   showStep(0);
+  window.scrollTo(0, 0);
 }
 
 // ---------- 1. 문진 화면 ----------
 function showStep(i) {
+  document.body.className = "";
   const s = STEPS[i];
   const groups = s.groups();
-  let html = `<div class="step">${i + 1} / 4</div><h2>${s.title}</h2>
-    <p class="hint">${s.multi ? "여러 개 골라도 돼요" : "하나만 골라주세요"}</p>`;
+  let html = i === 0 ? HERO : `<div class="top"><button class="back" id="prev" aria-label="이전">←</button>
+      <div class="progress">${STEPS.map((_, n) => `<i class="${n <= i ? "done" : ""}"></i>`).join("")}</div></div>`;
+  html += `<div class="head"><div class="eyebrow">${i + 1} / 4</div><h1>${s.title}</h1><p class="desc">${s.desc}</p></div>`;
   for (const g in groups) {
-    if (g) html += `<h3>${g}</h3>`;
+    html += g ? `<div class="group">${g}</div>` : `<div class="group"></div>`;
+    html += `<div class="list">`;
     for (const opt of groups[g]) {
-      const value = s.key === "age" ? opt.split(" ")[0] : opt;
-      const on = s.multi ? profile[s.key].includes(value) : profile[s.key] === value;
-      html += `<button class="opt ${on ? "on" : ""}" data-v="${esc(value)}">${opt}</button>`;
+      const on = s.multi ? profile[s.key].includes(opt) : profile[s.key] === opt;
+      const sub = s.key === "age" ? `<small>${AGES[opt]}</small>` : "";
+      html += `<button class="opt ${on ? "on" : ""}" data-v="${esc(opt)}"><span>${opt}${sub}</span></button>`;
     }
+    html += `</div>`;
   }
-  html += `<input id="etc" placeholder="기타 직접 입력" value="${esc(profile.etc[s.key] || "")}">
-    <div class="bar">
-      ${i > 0 ? `<button class="btn sub" id="prev">이전</button>` : ""}
-      <button class="btn" id="next">${i < 3 ? "다음" : "추천 영상 보기"}</button>
-    </div>`;
+  html += `<input class="etc" id="etc" placeholder="기타 — 직접 적어주세요" value="${esc(profile.etc[s.key] || "")}">
+    <div class="bar"><button class="btn" id="next">${i < 3 ? "다음" : "추천 영상 보기"}</button></div>`;
   app.innerHTML = html;
 
+  const keepEtc = () => profile.etc[s.key] = document.getElementById("etc").value;
   app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
     const v = b.dataset.v;
     if (s.multi) {
@@ -133,10 +212,9 @@ function showStep(i) {
       if (s.key === "age" && profile.age !== v) profile.problems = []; // 나이가 바뀌면 어려운 점 초기화
       profile[s.key] = v;
     }
-    profile.etc[s.key] = document.getElementById("etc").value;
+    keepEtc();
     showStep(i);
   });
-  const keepEtc = () => profile.etc[s.key] = document.getElementById("etc").value;
   if (i > 0) document.getElementById("prev").onclick = () => { keepEtc(); showStep(i - 1); window.scrollTo(0, 0); };
   document.getElementById("next").onclick = () => {
     keepEtc();
@@ -147,27 +225,31 @@ function showStep(i) {
 
 // ---------- 2. 추천 화면 ----------
 function showList() {
+  document.body.className = "";
   // 바라는 점 + 어려운 점에 연결된 카테고리를 모음
   const cats = [...profile.helps];
   for (const p of profile.problems)
     for (const c of (PROBLEMS[profile.age] || {})[p] || [])
       if (!cats.includes(c)) cats.push(c);
 
-  let html = `<h2>추천 영상</h2><p class="hint">${profile.age || "나이 미선택"} · 고른 항목에 맞춘 영상이에요</p>`;
-  if (!cats.length) html += `<p class="empty">고른 항목이 없어요. 다시 골라주세요.</p>`;
+  let html = `<div style="position:relative">${HERO}<button class="redo" id="redo">다시 고르기</button></div>
+    <div class="head"><div class="eyebrow">${profile.age ? profile.age + " 맞춤" : "맞춤 추천"}</div>
+      <h1>오늘 보여주기 좋은<br>영상을 골랐어요</h1>
+      <p class="desc">고르신 고민과 바람에 맞춘 영상이에요.</p></div>`;
+  if (!cats.length) html += `<div class="list" style="margin-top:20px"><p class="empty">고른 항목이 없어요. 오른쪽 위 '다시 고르기'를 눌러주세요.</p></div>`;
   for (const c of cats) {
     const list = (VIDEOS[c] || []).filter(v => !profile.age || !v.ages || v.ages.includes(profile.age));
-    html += `<h3>${c}</h3>`;
+    html += `<div class="group">${c}</div><div class="list">`;
     if (!list.length) html += `<p class="empty">아직 이 나이에 맞는 영상이 없어요</p>`;
     for (const v of list) {
       const id = videoId(v.url);
-      html += `<button class="card" data-id="${id}" data-t="${esc(v.title)}">
-        <img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt=""><span>${esc(v.title)}</span></button>`;
+      html += `<button class="card" data-id="${id}" data-t="${esc(v.title)}" data-c="${esc(c)}">
+        <img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="" loading="lazy"><span>${esc(v.title)}</span></button>`;
     }
+    html += `</div>`;
   }
-  html += `<div class="bar"><button class="btn" id="redo">다시 고르기</button></div>`;
   app.innerHTML = html;
-  app.querySelectorAll(".card").forEach(b => b.onclick = () => showPlayer(b.dataset.id, b.dataset.t));
+  app.querySelectorAll(".card").forEach(b => b.onclick = () => showPlayer(b.dataset.id, b.dataset.t, b.dataset.c));
   document.getElementById("redo").onclick = start;
   window.scrollTo(0, 0);
 }
@@ -179,11 +261,12 @@ function videoId(url) {
 }
 
 // ---------- 3. 재생 화면 (유튜브 공식 임베드) ----------
-function showPlayer(id, title) {
-  app.innerHTML = `<h2>${esc(title)}</h2>
+function showPlayer(id, title, cat) {
+  document.body.className = "dark";
+  app.innerHTML = `<div class="top"><button class="back" id="back" aria-label="목록으로">←</button></div>
     <div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0"
       allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
-    <div class="bar"><button class="btn" id="back">← 목록으로</button></div>`;
+    <div class="now"><div class="eyebrow">${esc(cat)}</div><h1>${esc(title)}</h1></div>`;
   document.getElementById("back").onclick = showList;
   window.scrollTo(0, 0);
 }
