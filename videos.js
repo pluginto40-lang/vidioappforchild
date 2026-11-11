@@ -27,12 +27,6 @@ const VIDEOS = {
       "source": "https://www.youtube.com/watch?v=5fP1lCU_mwY"
     },
     {
-      "title": "가 | 가면 무도회",
-      "url": "https://www.youtube.com/watch?v=8PUfpZUIs5M",
-      "language": "ko",
-      "source": "https://www.dolearn.ai/sub/lecture/lecture_detail?idx=758"
-    },
-    {
       "title": "나 | 나처럼 해 봐요",
       "url": "https://www.youtube.com/watch?v=q-jHQIUB69s",
       "language": "ko",
