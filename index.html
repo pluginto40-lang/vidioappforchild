@@ -89,6 +89,32 @@
   .now { padding: 20px 0; }
   .now .eyebrow { color: #FFB199; }
   .now h1 { font-size: 22px; }
+  .notice { margin-top: 12px; color: #FFB199; font-size: 15px; }
+
+  /* 한 번에 볼 편수 */
+  .limit { display: flex; gap: 8px; }
+  .limit button { flex: 1; padding: 12px; border: 0; border-radius: 999px; background: var(--card); font-size: 15px; font-weight: 600; }
+  .limit button.on { background: var(--ink); color: #fff; }
+
+  /* 오늘은 여기까지 */
+  .end { text-align: center; padding: 72px 8px 0; }
+  .end svg { width: 96px; height: 96px; }
+  .end h1 { margin-top: 20px; }
+  .end .desc { color: rgba(255,255,255,0.7); }
+  body.dark .btn { background: #fff; color: var(--ink); }
+
+  /* 부모 확인 */
+  .lock { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 10; }
+  .lock form { width: 100%; max-width: 360px; background: var(--card); color: var(--ink); border-radius: 24px; padding: 24px; }
+  .lock h2 { margin: 0 0 4px; font-size: 20px; }
+  .lock p { margin: 0 0 16px; color: var(--sub); font-size: 14px; }
+  .lock .q { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+  .lock input { width: 100%; padding: 14px 16px; border: 2px solid var(--line); border-radius: 14px; font: inherit; font-size: 20px; outline: none; }
+  .lock input:focus { border-color: var(--ink); }
+  .lock .row { display: flex; gap: 8px; margin-top: 16px; }
+  .lock .row button { flex: 1; padding: 14px; border: 0; border-radius: 999px; font-size: 16px; font-weight: 700; background: var(--bg); }
+  .lock .row button[type=submit] { background: var(--ink); color: #fff; }
+  .lock .wrong { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -190,6 +216,17 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 
 function save() { try { localStorage.setItem("profile", JSON.stringify(profile)); } catch (e) {} }
 
+// 이 기기에서 재생이 안 됐던 영상 번호 (다음 추천에서 뺌)
+let skipped = [];
+try { skipped = JSON.parse(localStorage.getItem("skipped")) || []; } catch (e) {}
+function markSkipped(id) {
+  if (!skipped.includes(id)) skipped.push(id);
+  try { localStorage.setItem("skipped", JSON.stringify(skipped)); } catch (e) {}
+}
+
+// 한 번에 볼 편수 (부모가 1·2·3편 중 고름)
+let limit = Number(localStorage.getItem("limit")) || 1;
+
 function start() {
   profile = { age: "", gender: "", problems: [], helps: [], etc: {} };
   showStep(0);
@@ -256,7 +293,7 @@ function recommend(answers) {
     for (const video of list) {
       const id = videoId(video.url);
       const language = video.language || (category === english ? "en" : "ko");
-      if (!id || (video.ages && answers.age && !video.ages.includes(answers.age))) continue;
+      if (!id || skipped.includes(id) || (video.ages && answers.age && !video.ages.includes(answers.age))) continue;
       if (language === "en" && !categories.has(english)) continue;
       if (language === "ko" && categories.size === 1 && categories.has(english)) continue;
       if (!byId.has(id)) byId.set(id, { ...video, id, categories: [] });
@@ -281,28 +318,42 @@ function recommend(answers) {
 
 function showList() {
   document.body.className = "";
+  session = null;
   const result = recommend(profile);
-  const count = result.direct.length + result.related.length;
+  const all = [...result.direct, ...result.related];
+  const count = all.length;
   let html = `<div style="position:relative">${HERO}<button class="redo" id="redo">다시 고르기</button></div>
     <div class="head"><div class="eyebrow">${esc(profile.age || "우리 아이")} · 추천 ${count}편</div>
       <h1>오늘 보여주기 좋은<br>영상을 골랐어요</h1>
-      <p class="desc">선택한 주제의 영상을 먼저 보여드려요. 연관 영상은 전체의 40% 이하로 함께 보여드려요.</p></div>`;
+      <p class="desc">선택한 주제의 영상을 먼저 보여드려요. 연관 영상은 전체의 40% 이하로 함께 보여드려요.</p></div>
+    <div class="group">한 번에 볼 영상 · 다 보면 '오늘은 여기까지' 화면이 나와요</div>
+    <div class="limit">${[1, 2, 3].map(n => `<button class="${n === limit ? "on" : ""}" data-n="${n}">${n}편</button>`).join("")}</div>`;
   if (!result.categories.size) html += '<p class="empty">어려운 점이나 바라는 점을 골라주세요. 직접 입력은 분류 이름과 일치하는 부분으로 찾아요.</p>';
   else if (count < 10) html += '<p class="empty">이 선택에 맞는 영상이 아직 부족해요. 등록된 영상부터 보여드려요.</p>';
   for (const [label, list] of [["선택한 주제", result.direct], ["함께 볼 연관 영상", result.related]]) {
     if (!list.length) continue;
     html += `<div class="group">${label} · ${list.length}편</div><div class="list">`;
     for (const v of list) {
-      const reason = (v.matches.length ? v.matches : v.categories).join(" · ");
-      html += `<button class="card" data-id="${v.id}" data-t="${esc(v.title)}" data-c="${esc(reason)}">
+      v.reason = (v.matches.length ? v.matches : v.categories).join(" · ");
+      html += `<button class="card" data-i="${all.indexOf(v)}">
         <img src="https://i.ytimg.com/vi/${v.id}/mqdefault.jpg" alt="" loading="lazy">
-        <span>${esc(v.title)}<small>${esc(reason)}</small></span></button>`;
+        <span>${esc(v.title)}<small>${esc(v.reason)}</small></span></button>`;
     }
     html += "</div>";
   }
   app.innerHTML = html;
-  app.querySelectorAll(".card").forEach(b => b.onclick = () => showPlayer(b.dataset.id, b.dataset.t, b.dataset.c));
-  document.getElementById("redo").onclick = start;
+  app.querySelectorAll(".limit button").forEach(b => b.onclick = () => {
+    limit = Number(b.dataset.n);
+    try { localStorage.setItem("limit", limit); } catch (e) {}
+    app.querySelectorAll(".limit button").forEach(x => x.classList.toggle("on", x === b));
+  });
+  // 고른 영상부터 시작해, 재생이 안 되면 목록의 다음 영상으로 넘어갑니다.
+  app.querySelectorAll(".card").forEach(b => b.onclick = () => {
+    const i = Number(b.dataset.i);
+    session = { queue: [...all.slice(i), ...all.slice(0, i)], watched: 0 };
+    playNext();
+  });
+  document.getElementById("redo").onclick = () => parentCheck(start);
   window.scrollTo(0, 0);
 }
 
@@ -318,7 +369,30 @@ function videoId(url) {
 }
 
 // ---------- 3. 재생 화면 (유튜브 공식 임베드) ----------
-function showPlayer(id, title, cat) {
+// 지금 보는 묶음: 볼 차례인 영상들과 다 본 편수
+let session = null;
+
+function playNext() {
+  if (!session) return;
+  const v = session.queue.shift();
+  if (v && session.watched < limit) showPlayer(v);
+  else showEnd();
+}
+
+// 유튜브 공식 IFrame Player API를 한 번만 불러옵니다.
+function whenYouTubeReady(fn) {
+  if (window.YT && YT.Player) return fn();
+  (window.ytWaiting ||= []).push(fn);
+  if (document.getElementById("yt-api")) return;
+  window.onYouTubeIframeAPIReady = () => window.ytWaiting.forEach(f => f());
+  const s = document.createElement("script");
+  s.id = "yt-api";
+  s.src = "https://www.youtube.com/iframe_api";
+  document.body.appendChild(s);
+}
+
+function showPlayer(v) {
+  const { id, title, reason: cat } = v;
   document.body.className = "dark";
   if (location.protocol === "file:") {
     app.innerHTML = `<div class="top"><button class="back" id="back" aria-label="목록으로">←</button></div>
@@ -331,13 +405,67 @@ function showPlayer(id, title, cat) {
     return;
   }
   const playerUrl = new URL("https://www.youtube-nocookie.com/embed/" + id);
-  playerUrl.search = new URLSearchParams({ autoplay: "1", playsinline: "1", rel: "0", origin: location.origin });
+  playerUrl.search = new URLSearchParams({ autoplay: "1", playsinline: "1", rel: "0", enablejsapi: "1", origin: location.origin });
   app.innerHTML = `<div class="top"><button class="back" id="back" aria-label="목록으로">←</button></div>
-    <div class="player"><iframe title="${esc(title)}" referrerpolicy="strict-origin-when-cross-origin" src="${esc(playerUrl.href)}"
+    <div class="player"><iframe id="yt" title="${esc(title)}" referrerpolicy="strict-origin-when-cross-origin" src="${esc(playerUrl.href)}"
       allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
-    <div class="now"><div class="eyebrow">${esc(cat)}</div><h1>${esc(title)}</h1></div>`;
+    <div class="now"><div class="eyebrow">${esc(cat)}</div><h1>${esc(title)}</h1><p class="notice" id="notice"></p></div>`;
   document.getElementById("back").onclick = showList;
   window.scrollTo(0, 0);
+
+  const frame = document.getElementById("yt");
+  whenYouTubeReady(() => {
+    if (!frame.isConnected) return; // 그사이 다른 화면으로 이동함
+    new YT.Player(frame, { events: {
+      // 영상이 끝나면 유튜브 다음 추천 대신 정한 편수만큼 이어 보고 끝 화면으로
+      onStateChange: e => {
+        if (e.data !== YT.PlayerState.ENDED || !frame.isConnected) return;
+        session.watched++;
+        playNext();
+      },
+      // 재생 불가(100)·임베드 금지(101, 150)면 기억해 두고 다음 영상으로
+      onError: e => {
+        if (![100, 101, 150].includes(e.data) || !frame.isConnected) return;
+        markSkipped(id);
+        document.getElementById("notice").textContent = "이 영상은 지금 재생할 수 없어요. 다음 영상으로 넘어갈게요.";
+        setTimeout(() => { if (frame.isConnected) playNext(); }, 2000);
+      },
+    } });
+  });
+}
+
+// ---------- 4. 오늘은 여기까지 ----------
+function showEnd() {
+  document.body.className = "dark";
+  const n = session ? session.watched : 0;
+  app.innerHTML = `<div class="end">
+      <svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="34" fill="#FFCB57"/><circle cx="62" cy="38" r="30" fill="#16131F"/></svg>
+      <div class="eyebrow">${n ? `${n}편을 다 봤어요` : "볼 수 있는 영상을 다 봤어요"}</div>
+      <h1>오늘은 여기까지</h1>
+      <p class="desc">화면은 잠시 쉬고,<br>방금 본 이야기를 함께 나눠 보세요.</p></div>
+    <div class="bar" style="background:none"><button class="btn" id="more">부모님 · 목록으로 돌아가기</button></div>`;
+  document.getElementById("more").onclick = () => parentCheck(showList);
+  window.scrollTo(0, 0);
+}
+
+// ---------- 부모 확인 (아이가 실수로 누르는 것 막기) ----------
+function parentCheck(onPass) {
+  const a = 10 + Math.floor(Math.random() * 40), b = 10 + Math.floor(Math.random() * 40);
+  const box = document.createElement("div");
+  box.className = "lock";
+  box.innerHTML = `<form><h2>부모님 확인</h2><p id="lock-msg">아래 문제의 답을 입력해 주세요.</p>
+    <div class="q">${a} + ${b} = ?</div>
+    <input id="lock-answer" type="text" inputmode="numeric" autocomplete="off" aria-label="답">
+    <div class="row"><button type="button" id="lock-cancel">취소</button><button type="submit">확인</button></div></form>`;
+  document.body.appendChild(box);
+  const input = box.querySelector("input");
+  input.focus();
+  box.querySelector("#lock-cancel").onclick = () => box.remove();
+  box.querySelector("form").onsubmit = e => {
+    e.preventDefault();
+    if (Number(input.value) === a + b) { box.remove(); onPass(); }
+    else { box.remove(); parentCheck(onPass); document.getElementById("lock-msg").textContent = "답이 달라요. 새 문제로 다시 해 볼까요?"; document.getElementById("lock-msg").className = "wrong"; }
+  };
 }
 
 // 처음 열 때: 저장된 답이 있으면 바로 추천 화면, 없으면 문진 시작
