@@ -6,10 +6,16 @@ from pathlib import Path
 import webbrowser
 
 
+APP_FILES = ("/", "/index.html", "/videos.js", "/manifest.webmanifest", "/sw.js", "/offline.html")
+
+
 class AppHandler(SimpleHTTPRequestHandler):
+    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".webmanifest": "application/manifest+json"}
+
     def do_GET(self):
         # 앱에 필요한 파일만 제공하며 폴더 목록과 Git 자료는 공개하지 않습니다.
-        if self.path.split("?", 1)[0] not in ("/", "/index.html", "/videos.js"):
+        path = self.path.split("?", 1)[0]
+        if path not in APP_FILES and not (path.startswith("/icons/") and path.count("/") == 2 and path.endswith(".png")):
             self.send_error(404)
             return
         super().do_GET()
