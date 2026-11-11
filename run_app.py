@@ -6,7 +6,8 @@ from pathlib import Path
 import webbrowser
 
 
-APP_FILES = ("/", "/index.html", "/videos.js", "/manifest.webmanifest", "/sw.js", "/offline.html")
+APP_FILES = ("/", "/index.html", "/videos.js", "/manifest.webmanifest", "/sw.js", "/offline.html",
+             "/privacy.html", "/support.html")
 
 
 class AppHandler(SimpleHTTPRequestHandler):
