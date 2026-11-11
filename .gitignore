@@ -1,1 +1,12 @@
 .claude/
+
+# Android(TWA) - 서명 키와 빌드 결과물은 절대 올리지 않기
+*.keystore
+*.jks
+*.aab
+*.apk
+*.idsig
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties

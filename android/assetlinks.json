@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.pluginto40_lang.kidvideo",
+      "sha256_cert_fingerprints": [
+        "D7:1A:AD:FA:72:1F:89:81:1A:0E:BE:69:37:14:C5:9F:80:BA:9C:7A:31:DF:74:01:08:43:AB:E2:13:B6:DE:D6"
+      ]
+    }
+  }
+]
