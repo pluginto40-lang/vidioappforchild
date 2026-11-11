@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#F2F1EE">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>우리 아이 맞춤 영상</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root {
@@ -345,6 +348,10 @@ if (profile && Array.isArray(profile.helps) && Array.isArray(profile.problems)) 
   profile.etc ||= {};
   showList();
 } else start();
+</script>
+<!-- 앱 설치·오프라인 안내용 (sw.js) -->
+<script>
+if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js");
 </script>
 </body>
 </html>
